@@ -5,12 +5,14 @@ import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,6 +22,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -27,9 +34,11 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class MainActivity2 extends AppCompatActivity implements Runnable{
-    public final String TAG = "FirstPage";
+    String TAG = "FirstPage";
     float exchanged_money = 0;
     float exchange =0;
     TextView exchanged_text;//显示框
@@ -45,28 +54,43 @@ public class MainActivity2 extends AppCompatActivity implements Runnable{
         setContentView(R.layout.activity_main2);
         inputText = findViewById(R.id.editText);
         exchanged_text = findViewById(R.id.textView);
-        load_Rate();
 
-        //开启线程
-        Thread t = new Thread(this);
-        t.start();//this.run()
+        if(isTodayFirstStartApp(this)){
+            Log.i(TAG, "onCreate: 今天首次打开APP，获取汇率");
+            //开启线程
+            Thread t = new Thread(this);
+            t.start();//this.run()
+            handler = new Handler(Looper.myLooper()){
+                @Override
+                public void handleMessage(@NonNull Message msg) {
+                    Log.i("FirstPage", "handleMessage: 收到消息");
+                    if (msg.what == 6){
+                        Bundle bundle = (Bundle)msg.obj;
+                        rate1 = bundle.getFloat("r1");
+                        rate2 = bundle.getFloat("r2");
+                        rate3 = bundle.getFloat("r3");
+                        Log.i(TAG, "handleMessage: rate1="+rate1);
+                        Log.i(TAG, "handleMessage: rate2="+rate2);
+                        Log.i(TAG, "handleMessage: rate3="+rate3);
 
-        handler = new Handler(Looper.myLooper()){
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                Log.i("FirstPage", "handleMessage: 收到消息");
-                if (msg.what == 6){
-                    String str = (String) msg.obj;
-                    Log.i("FirstPage", "handleMessage: str="+str);
-                    exchanged_text.setText(str);
+                        //提示
+                        Toast.makeText(MainActivity2.this,"数据已更新",Toast.LENGTH_SHORT).show();
+                    }
+                    super.handleMessage(msg);
                 }
-                super.handleMessage(msg);
-            }
-        };
+            };
+        }
+        else {
+            Log.i(TAG, "onCreate: 非首次打开APP，不获取汇率");
+            load_Rate();
+        }
+
+
     }
 
     private void load_Rate() {
         SharedPreferences sp = getSharedPreferences("myrate", Activity.MODE_PRIVATE);
+
         rate1 = sp.getFloat("rate1_dl", 0.1f);
         rate2 = sp.getFloat("rate2_dl", 0.2f);
         rate3 = sp.getFloat("rate3_dl", 0.3f);
@@ -136,8 +160,37 @@ public class MainActivity2 extends AppCompatActivity implements Runnable{
         startActivityForResult(config, 1);
     }
 
+    /**
+     * 判断是否是今日首次启动APP
+     * @param context
+     * @return
+     */
+    public static boolean isTodayFirstStartApp(Context context) {
+        try {
+            SharedPreferences preferences = context.getSharedPreferences("NB_TODAY_FIRST_START_APP", context.MODE_PRIVATE);
+            String saveTime = preferences.getString("startAppTime", "2020-01-08");
+            String todayTime = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+
+            if (!TextUtils.isEmpty(todayTime) && !TextUtils.isEmpty(saveTime)) {
+                if(!saveTime.equals(todayTime)) {
+                    preferences.edit().putString("startAppTime", todayTime).commit();
+                    return true;
+                }
+            }
+
+        }catch (Exception e){
+            Log.i("FirstPage", "isTodayFirstStartApp: Exception"+e.toString());
+            return true;
+        }
+        return  false;
+
+    }
+
+
+
     @Override
     public void run() {
+        float rate_web[] = new float[3];
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
@@ -147,22 +200,41 @@ public class MainActivity2 extends AppCompatActivity implements Runnable{
 
         //获取网络数据
         try {
-            URL url = new URL("https:/www.usd-cny.com/bankofchina.htm");
-            HttpURLConnection http = (HttpURLConnection) url.openConnection();
-            InputStream in = http.getInputStream();
 
-            String html = inputStream2String(in);
-            Log.i(TAG, "run:html="+html);
+            Document doc = Jsoup.connect("https:/www.usd-cny.com/bankofchina.htm").get();
+
+            Elements tables = doc.getElementsByTag("table");
+            Element table1 = tables.get(0);//=tables.first()
+            Elements tds = table1.getElementsByTag("td");
+            int j = 0;
+            for(int i = 0;i < tds.size();i+=6){
+                Element td1 = tds.get(i);
+                Element td2 = tds.get(i+5);
+
+                String str1 = td1.text();
+                String val = td2.text();
+                if (str1.equals("英镑")||str1.equals("美元")||str1.equals("日元")){
+                    Log.i(TAG, "run: "+str1+"==>"+val);
+                    float v = 100f/Float.parseFloat(val);
+                    rate_web[j] = v;
+                    j++;
+                }
+            }
+
+
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        Message msg = handler.obtainMessage();
-        msg.what = 6;
-        msg.obj = "Hello from run";
+        Bundle bdl = new Bundle();
+        bdl.putFloat("r1",rate_web[0]);
+        bdl.putFloat("r2",rate_web[1]);
+        bdl.putFloat("r3",rate_web[2]);
+        Message msg = handler.obtainMessage(6,bdl);
         handler.sendMessage(msg);
+        Log.i(TAG, "run: 消息已发送给主线程");
+
     }
 
     //输入流转为字符串
