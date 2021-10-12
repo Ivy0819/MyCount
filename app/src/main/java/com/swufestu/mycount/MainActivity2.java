@@ -37,7 +37,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class MainActivity2 extends AppCompatActivity implements Runnable{
+public class MainActivity2 extends AppCompatActivity{
     String TAG = "FirstPage";
     float exchanged_money = 0;
     float exchange =0;
@@ -58,8 +58,9 @@ public class MainActivity2 extends AppCompatActivity implements Runnable{
         if(isTodayFirstStartApp(this)){
             Log.i(TAG, "onCreate: 今天首次打开APP，获取汇率");
             //开启线程
-            Thread t = new Thread(this);
-            t.start();//this.run()
+            MyThread td = new MyThread();
+            Log.i(TAG, "onCreate:开启线程");
+
             handler = new Handler(Looper.myLooper()){
                 @Override
                 public void handleMessage(@NonNull Message msg) {
@@ -79,6 +80,11 @@ public class MainActivity2 extends AppCompatActivity implements Runnable{
                     super.handleMessage(msg);
                 }
             };
+
+            td.setHandler(handler);
+            Thread t = new Thread(td);
+            t.start();
+
         }
         else {
             Log.i(TAG, "onCreate: 非首次打开APP，不获取汇率");
@@ -188,54 +194,54 @@ public class MainActivity2 extends AppCompatActivity implements Runnable{
 
 
 
-    @Override
-    public void run() {
-        float rate_web[] = new float[3];
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        Log.i("FirstPage", "run: 线程运行");
-
-        //获取网络数据
-        try {
-
-            Document doc = Jsoup.connect("https:/www.usd-cny.com/bankofchina.htm").get();
-
-            Elements tables = doc.getElementsByTag("table");
-            Element table1 = tables.get(0);//=tables.first()
-            Elements tds = table1.getElementsByTag("td");
-            int j = 0;
-            for(int i = 0;i < tds.size();i+=6){
-                Element td1 = tds.get(i);
-                Element td2 = tds.get(i+5);
-
-                String str1 = td1.text();
-                String val = td2.text();
-                if (str1.equals("英镑")||str1.equals("美元")||str1.equals("日元")){
-                    Log.i(TAG, "run: "+str1+"==>"+val);
-                    float v = 100f/Float.parseFloat(val);
-                    rate_web[j] = v;
-                    j++;
-                }
-            }
-
-
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Bundle bdl = new Bundle();
-        bdl.putFloat("r1",rate_web[0]);
-        bdl.putFloat("r2",rate_web[1]);
-        bdl.putFloat("r3",rate_web[2]);
-        Message msg = handler.obtainMessage(6,bdl);
-        handler.sendMessage(msg);
-        Log.i(TAG, "run: 消息已发送给主线程");
-
-    }
+//    @Override
+//    public void run() {
+//        float rate_web[] = new float[3];
+//        try {
+//            Thread.sleep(3000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        Log.i("FirstPage", "run: 线程运行");
+//
+//        //获取网络数据
+//        try {
+//
+//            Document doc = Jsoup.connect("https:/www.usd-cny.com/bankofchina.htm").get();
+//
+//            Elements tables = doc.getElementsByTag("table");
+//            Element table1 = tables.get(0);//=tables.first()
+//            Elements tds = table1.getElementsByTag("td");
+//            int j = 0;
+//            for(int i = 0;i < tds.size();i+=6){
+//                Element td1 = tds.get(i);
+//                Element td2 = tds.get(i+5);
+//
+//                String str1 = td1.text();
+//                String val = td2.text();
+//                if (str1.equals("英镑")||str1.equals("美元")||str1.equals("日元")){
+//                    Log.i(TAG, "run: "+str1+"==>"+val);
+//                    float v = 100f/Float.parseFloat(val);
+//                    rate_web[j] = v;
+//                    j++;
+//                }
+//            }
+//
+//
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        Bundle bdl = new Bundle();
+//        bdl.putFloat("r1",rate_web[0]);
+//        bdl.putFloat("r2",rate_web[1]);
+//        bdl.putFloat("r3",rate_web[2]);
+//        Message msg = handler.obtainMessage(6,bdl);
+//        handler.sendMessage(msg);
+//        Log.i(TAG, "run: 消息已发送给主线程");
+//
+//    }
 
     //输入流转为字符串
     private String inputStream2String(InputStream inputStream) throws IOException{
