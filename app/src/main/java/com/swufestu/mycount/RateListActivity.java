@@ -8,9 +8,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import java.util.ArrayList;
 
@@ -24,11 +26,8 @@ public class RateListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rate_list);
         ListView listView = findViewById(R.id.listView1);
+        ProgressBar progressBar = findViewById(R.id.progressBar);
 
-        String[] list_data = {"one","two","three","four"};
-        ListAdapter adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, list_data);
-        listView.setAdapter(adapter);
 
         //开启线程
         MyThread_getList td = new MyThread_getList();
@@ -45,6 +44,10 @@ public class RateListActivity extends AppCompatActivity {
                     ListAdapter adapter = new ArrayAdapter<String>(RateListActivity.this,
                             android.R.layout.simple_list_item_1,list_show);
                     listView.setAdapter(adapter);
+
+                    //调整控件显示状态
+                    progressBar.setVisibility(View.GONE);
+                    listView.setVisibility(View.VISIBLE);
                 }
                 super.handleMessage(msg);
             }

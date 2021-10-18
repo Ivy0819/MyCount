@@ -13,6 +13,12 @@
         android:theme="@style/Theme.MyCount"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".CountRateSingle"
+            android:exported="true" />
+        <activity
+            android:name=".RateList2Activity"
+            android:exported="true" />
+        <activity
             android:name=".RateListActivity"
             android:exported="true" />
         <activity

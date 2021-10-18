@@ -4,13 +4,17 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/android/MyProgram/MyCount/app/src/main/res/layout-land/activity_main.xml" value="0.1384479717813051" />
+        <entry key="..\:/android/MyProgram/MyCount/app/src/main/res/layout/activity_count_rate_single.xml" value="0.14895833333333333" />
         <entry key="..\:/android/MyProgram/MyCount/app/src/main/res/layout/activity_main.xml" value="0.1" />
         <entry key="..\:/android/MyProgram/MyCount/app/src/main/res/layout/activity_main2.xml" value="0.1" />
         <entry key="..\:/android/MyProgram/MyCount/app/src/main/res/layout/activity_main3.xml" value="0.12771739130434784" />
         <entry key="..\:/android/MyProgram/MyCount/app/src/main/res/layout/activity_my_list.xml" value="0.1" />
         <entry key="..\:/android/MyProgram/MyCount/app/src/main/res/layout/activity_rate_list.xml" value="0.1" />
+        <entry key="..\:/android/MyProgram/MyCount/app/src/main/res/layout/activity_rate_list2.xml" value="0.1" />
+        <entry key="..\:/android/MyProgram/MyCount/app/src/main/res/layout/list_item.xml" value="0.22" />
         <entry key="..\:/android/MyProgram/MyCount/app/src/main/res/menu/mymenu.xml" value="0.1" />
         <entry key="..\:/android/MyProgram/MyCount/app/src/main/res/menu/rate.xml" value="0.1" />
+        <entry key="..\:/android/sdk/platforms/android-31/data/res/layout/simple_list_item_1.xml" value="0.1" />
       </map>
     </option>
   </component>
