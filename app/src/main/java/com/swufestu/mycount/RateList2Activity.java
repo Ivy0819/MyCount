@@ -3,6 +3,8 @@ package com.swufestu.mycount;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,6 +15,7 @@ import android.view.View;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.GridView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -20,11 +23,12 @@ import android.widget.SimpleAdapter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class RateList2Activity extends AppCompatActivity implements AdapterView.OnItemClickListener {
-    ArrayList<HashMap<String, String>> listItems;
+public class RateList2Activity extends AppCompatActivity implements AdapterView.OnItemLongClickListener,AdapterView.OnItemClickListener {
     final String TAG = "RateList2Page";
-    ListView list2;
+    GridView list2;
     Handler handler;
+    ArrayList<Item> rlist = new ArrayList<Item>();
+    MyAdapter myAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,27 +36,11 @@ public class RateList2Activity extends AppCompatActivity implements AdapterView.
         setContentView(R.layout.activity_rate_list2);
         list2 = findViewById(R.id.list2);
         list2.setOnItemClickListener(this);//绑定监听
+        list2.setOnItemLongClickListener(this);
 
-        listItems = new ArrayList<HashMap<String, String>>();
-        for(int i = 0; i < 10; i++){
-            HashMap<String,String> map = new HashMap<String,String>();
-            map.put("ItemTitle","Rate:"+i);
-            map.put("ItemDetail","Detail:"+i);
-            listItems.add(map);
-        }
-
-        //准备数据
-//
-//
-//        //生成适配器的Item和动态数组对应的元素
-//        SimpleAdapter listItemAdapter = new SimpleAdapter(this, listItems, R.layout.list_item,
-//                new String[]{"ItemTitle", "ItemDetail"},
-//                new int[]{R.id.itemTitle, R.id.itemDetail});
-//
-//        list2.setAdapter(listItemAdapter);
 
         //开启线程
-        MyThread_getMap td = new MyThread_getMap();
+        MyThread_ItemMap td = new MyThread_ItemMap();
         Log.i(TAG, "onCreate:开启线程");
 
         //定义对象时不会调用非构造函数的方法
@@ -61,12 +49,13 @@ public class RateList2Activity extends AppCompatActivity implements AdapterView.
             public void handleMessage(@NonNull Message msg) {
                 Log.i(TAG, "handleMessage: 收到消息");
                 if (msg.what == 9){
-                    ArrayList<HashMap<String,String>> rlist = (ArrayList<HashMap<String, String>>) msg.obj;
+                    rlist = (ArrayList<Item>) msg.obj;
                     Log.i(TAG, "handleMessage: rlist="+rlist.toString());
-                    MyAdapter myAdapter = new MyAdapter(RateList2Activity.this,
+                    myAdapter = new MyAdapter(RateList2Activity.this,
                             R.layout.list_item,
                             rlist);
                     list2.setAdapter(myAdapter);
+                    list2.setEmptyView(findViewById(R.id.nodata));
                 }
                 super.handleMessage(msg);
             }
@@ -80,9 +69,9 @@ public class RateList2Activity extends AppCompatActivity implements AdapterView.
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Object itemAtPosition = list2.getItemAtPosition(position);
-        HashMap<String,String> map = (HashMap<String, String>)itemAtPosition;
-        String country = map.get("ItemDetail");
-        String rate = map.get("ItemTitle");
+        Item map = (Item)itemAtPosition;
+        String country = map.getCname();
+        String rate = map.getCval();
         Log.i(TAG, "打开CountSingle窗口");
         Intent countSingle = new Intent(this, CountRateSingle.class);
 
@@ -92,6 +81,28 @@ public class RateList2Activity extends AppCompatActivity implements AdapterView.
 
 
         //startActivity(intent);
-        startActivityForResult(countSingle, 1);
+        startActivity(countSingle);
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent,View view,int position,long id) {
+        Log.i(TAG, "onLongClick: 长按操作");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("提示").setMessage("请确认是否删除当前数据").setPositiveButton("是", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Log.i(TAG, "onClick: 对话框事件处理");
+                //删除数据项
+                myAdapter.remove(list2.getItemAtPosition(position));
+                //更新适配器
+                myAdapter.notifyDataSetChanged();
+
+            }
+        }).setNegativeButton("否",null);
+
+        builder.create().show();
+
+        return true;
     }
 }

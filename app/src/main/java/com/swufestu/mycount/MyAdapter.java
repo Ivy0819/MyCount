@@ -15,9 +15,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+//自定义适配器
 public class MyAdapter extends ArrayAdapter {
     private static final String TAG = "MyAdapter";
-    public MyAdapter(@NonNull Context context, int resource, @NonNull ArrayList<HashMap<String,String>> data) {
+    public MyAdapter(@NonNull Context context, int resource, @NonNull ArrayList<Item> data) {
         super(context, resource,data);
     }
 
@@ -31,11 +32,11 @@ public class MyAdapter extends ArrayAdapter {
                     false);
         }
 
-        Map<String,String> map = (Map<String, String>) getItem(position);
+        Item map = (Item) getItem(position);
         TextView title = (TextView) itemView.findViewById(R.id.itemTitle);
         TextView detail = (TextView) itemView.findViewById(R.id.itemDetail);
-        title.setText(map.get("ItemDetail"));
-        detail.setText(map.get("ItemTitle"));
+        title.setText(map.getCname());
+        detail.setText(map.getCval());
 
         return  itemView;
     }
