@@ -4,8 +4,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,36 +22,54 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 public class RateList2Activity extends AppCompatActivity implements AdapterView.OnItemLongClickListener,AdapterView.OnItemClickListener {
     final String TAG = "RateList2Page";
     GridView list2;
     Handler handler;
-    ArrayList<Item> rlist = new ArrayList<Item>();
+    ArrayList<RateItem> rlist = new ArrayList<RateItem>();
     MyAdapter myAdapter;
+    private String logDate = "";
+    private final String DATE_SP_KEY = "lastRateDateStr";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rate_list2);
+
+        SharedPreferences sp = getSharedPreferences("myrate", Context.MODE_PRIVATE);
+        logDate = sp.getString(DATE_SP_KEY, "");
+        Log.i("List","lastRateDateStr=" + logDate);
+
         list2 = findViewById(R.id.list2);
         list2.setOnItemClickListener(this);//绑定监听
         list2.setOnItemLongClickListener(this);
 
-
         //开启线程
-        MyThread_ItemMap td = new MyThread_ItemMap();
+        MyThread_ItemMap td = new MyThread_ItemMap(logDate,RateList2Activity.this);
         Log.i(TAG, "onCreate:开启线程");
 
         //定义对象时不会调用非构造函数的方法
         handler = new Handler(Looper.myLooper()){
             @Override
             public void handleMessage(@NonNull Message msg) {
+
                 Log.i(TAG, "handleMessage: 收到消息");
-                if (msg.what == 9){
-                    rlist = (ArrayList<Item>) msg.obj;
+                if (msg.what == 9 || msg.what == 8){
+                    if (msg.what==9){
+                        //更新记录日期
+                        String curDateStr = (new SimpleDateFormat("yyyy-MM-dd")).format(new Date());
+                        SharedPreferences sp = getSharedPreferences("myrate", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor edit = sp.edit();
+                        edit.putString(DATE_SP_KEY, curDateStr);
+                        edit.commit();
+                        Log.i("run","更新日期结束：" + curDateStr);
+                    }
+                    rlist = (ArrayList<RateItem>) msg.obj;
                     Log.i(TAG, "handleMessage: rlist="+rlist.toString());
                     myAdapter = new MyAdapter(RateList2Activity.this,
                             R.layout.list_item,

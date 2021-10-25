@@ -18,7 +18,7 @@ import java.util.Map;
 //自定义适配器
 public class MyAdapter extends ArrayAdapter {
     private static final String TAG = "MyAdapter";
-    public MyAdapter(@NonNull Context context, int resource, @NonNull ArrayList<Item> data) {
+    public MyAdapter(@NonNull Context context, int resource, @NonNull ArrayList<RateItem> data) {
         super(context, resource,data);
     }
 
@@ -32,11 +32,11 @@ public class MyAdapter extends ArrayAdapter {
                     false);
         }
 
-        Item map = (Item) getItem(position);
+        RateItem map = (RateItem) getItem(position);
         TextView title = (TextView) itemView.findViewById(R.id.itemTitle);
         TextView detail = (TextView) itemView.findViewById(R.id.itemDetail);
-        title.setText(map.getCname());
-        detail.setText(map.getCval());
+        title.setText(map.getCurName());
+        detail.setText(map.getCurRate());
 
         return  itemView;
     }
